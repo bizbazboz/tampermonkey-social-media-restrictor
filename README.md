@@ -41,5 +41,3 @@ If you’d like to add more features — e.g., time-based blocking, whitelist mo
 Please open issues for bugs or feature requests.
 Pull requests should include tests, documentation updates, and adhere to existing code style.
 
-```
-```
