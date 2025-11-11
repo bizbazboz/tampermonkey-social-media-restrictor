@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Social Media Blocker
-// @version      1.2.0
-// @description  Block all social media websites and stay focused.
+// @name         Social Media Blocker (with Lunch Break)
+// @version      1.3.0
+// @description  Block social media except during lunch (12:00–12:30)
 // @author       bizbazboz
 // @homepageURL  https://github.com/bizbazboz
 // @match        *://*/*
@@ -50,14 +50,25 @@
     /(?:^|\.)wechat\.com$/i
   ];
 
+  // --- Lunch break time window (local time) ---
+  const now = new Date();
+  const hour = now.getHours();
+  const minute = now.getMinutes();
+  const totalMinutes = hour * 60 + minute;
+
+  const LUNCH_START = 12 * 60; // 12:00
+  const LUNCH_END = 12 * 60 + 30; // 12:30
+
+  // If it's lunch time, allow browsing
+  if (totalMinutes >= LUNCH_START && totalMinutes < LUNCH_END) return;
+
+  // --- Otherwise, enforce blocking ---
   const host = location.hostname;
   const isBlocked = BLOCKED_DOMAINS.some((rx) => rx.test(host));
   if (!isBlocked) return;
 
-  // Immediately stop network requests and script execution
   try { window.stop(); } catch (e) {}
 
-  // Replace the entire document safely using a new DOM
   const html = `
     <!doctype html>
     <html lang="en">
@@ -93,6 +104,7 @@
       <div class="card" role="dialog">
         <h1>Blocked</h1>
         <p><span class="host">${host}</span> is on your block list.</p>
+        <p>Come back after <strong>12:30 PM</strong> to take a quick social break.</p>
         <div class="row">
           <button id="closeTab">Close tab</button>
           <a class="btn" href="about:blank" rel="noreferrer">Open blank page</a>
@@ -106,12 +118,9 @@
     </html>
   `;
 
-  // Create a new document and replace the current DOM safely
   const newDoc = document.implementation.createHTMLDocument("Blocked");
   newDoc.open();
   newDoc.write(html);
   newDoc.close();
-
-  // Swap out the current DOM with the new one
   document.replaceChild(newDoc.documentElement, document.documentElement);
 })();
